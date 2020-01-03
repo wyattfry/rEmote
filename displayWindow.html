@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- https://electronjs.org/docs/tutorial/security#csp-meta-tag -->
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <title>rEmote Display</title>
+    <style>
+        img {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+        }
+    </style>
+</head>
+<body>
+    <img id="backgrounds">
+    <img id="characters">
+    <img id="costumes">
+    <img id="emotions">
+    <script>
+        const electron = require('electron');
+        const { ipcRenderer } = electron;
+
+        ipcRenderer.on('showImage', function(e, layer, imagePath){
+            const imageEl = document.querySelector('#' + layer);
+            imageEl.src = imagePath;
+        });
+    </script>
+</body>
+</html>
