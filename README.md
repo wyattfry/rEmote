@@ -4,9 +4,6 @@ This is an electron desktop app to dynamically display layered images, designed 
 
 ## TODO
 
-- make a settings.json file that persists image directory locations
-- set image directory
-- persist directory locations
 - image ignore ability, persists
 - persist new size and position
 - animated gifs
@@ -30,3 +27,6 @@ This is an electron desktop app to dynamically display layered images, designed 
 - have image sets, background, character, costume and emotions
 - buttons are made for each file in directory
 - image layering (bg, char base, clothes, emotion, back to front respectively)
+- make a settings.json file that persists image directory locations
+- set image directory
+- persist directory locations

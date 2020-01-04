@@ -64,3 +64,5 @@ ts-gen
 # Used to accelerate CI builds
 .depshash
 .depshash-target
+
+settings.json

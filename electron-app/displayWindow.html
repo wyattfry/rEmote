@@ -9,7 +9,7 @@
       http-equiv="Content-Security-Policy"
       content="script-src 'self' 'unsafe-inline';"
     />
-    <title>rEmote Display</title>
+    <title>rEmote - Display</title>
     <style>
       img {
         position: absolute;
@@ -26,13 +26,14 @@
     <script>
       const electron = require("electron");
       const { ipcRenderer } = electron;
+      const path = require('path');
 
-      ipcRenderer.on("showImage", function(e, layer, imagePath) {
+      ipcRenderer.on("showImage", function(e, layer, imageDirectory, imageFileName) {
         const imageEl = document.querySelector("img#" + layer);
         if (imageEl == null) {
           console.log("Found no <img> element with id", layer);
         } else {
-          imageEl.src = imagePath;
+          imageEl.src = path.join(imageDirectory, imageFileName);
         }
       });
     </script>

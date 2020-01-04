@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Hello World!</title>
+    <title>rEmote - Control</title>
     <meta
       http-equiv="Content-Security-Policy"
       content="script-src 'self' 'unsafe-inline';"
@@ -11,15 +11,27 @@
   <body>
     <div id="buttons-div">
       <h2>Backgrounds</h2>
+      <a href="#" class="image-directory" data-layer="backgrounds"
+        >Set a directory</a
+      >
       <ul id="backgrounds"></ul>
 
       <h2>Characters</h2>
+      <a href="#" class="image-directory" data-layer="characters"
+        >Set a directory</a
+      >
       <ul id="characters"></ul>
 
       <h2>Costumes</h2>
+      <a href="#" class="image-directory" data-layer="costumes"
+        >Set a directory</a
+      >
       <ul id="costumes"></ul>
 
       <h2>Emotions</h2>
+      <a href="#" class="image-directory" data-layer="emotions"
+        >Set a directory</a
+      >
       <ul id="emotions"></ul>
     </div>
 
@@ -31,8 +43,17 @@
 
       const buttonsDiv = document.querySelector("#buttons-div");
       buttonsDiv.addEventListener("click", function(e) {
-        const { layer, imagepath } = e.target.dataset;
-        ipcRenderer.send("showImage", layer, imagepath);
+        if (e.target.classList.contains("show-image-button")) {
+          const { layer, fileName } = e.target.dataset;
+          ipcRenderer.send("showImage", layer, fileName);
+          return;
+        }
+
+        if (e.target.classList.contains("image-directory")) {
+          const { layer, directoryIsSet } = e.target.dataset;
+          ipcRenderer.send("setImageDirectory", layer);
+          return;
+        }
       });
 
       ipcRenderer.on("loadImages", function(e, layer, files) {
@@ -40,13 +61,21 @@
       });
 
       function appendButtonsToLayer(layer, files) {
+        // update directory selection text
+        const directoryText = document.querySelector(
+          `a.image-directory[data-layer='${layer}']`
+        );
+        directoryText.innerText = "Change the directory";
+        // create image selection buttons
         const ul = document.querySelector("ul#" + layer);
+        ul.innerHTML = "";
         files.forEach(f => {
           const li = document.createElement("li");
           const button = document.createElement("button");
+          button.classList.add("show-image-button");
           button.innerText = f.split(".")[0];
           button.dataset.layer = layer;
-          button.dataset.imagepath = layer + "/" + f;
+          button.dataset.fileName = f;
           li.appendChild(button);
           ul.appendChild(li);
         });
