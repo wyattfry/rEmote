@@ -7,11 +7,14 @@ This is an electron desktop app to dynamically display layered images, designed 
 - set image directory
 - persist directory locations
 - image ignore ability, persists
-- images can be repositioned and resized
 - persist new size and position
-
 - animated gifs
+
+### Control Window
+
 - option to re-show display window if (accidentally) closed
+- make gui look like wireframe
+  - make buttons thumbnails?
 
 ### Display Window
 
