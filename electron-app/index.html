@@ -10,30 +10,17 @@
     />
   </head>
   <body>
-    <button id="image-load-button">Load Images</button>
     <div id="buttons-div">
       <h2>Backgrounds</h2>
-      <ul>
-        <li>
-          <button data-layer="backgrounds" data-imagePath="backgrounds/background.png">Background</button>
-        </li>
+      <ul id="backgrounds">
       </ul>
 
       <h2>Characters</h2>
-      <ul>
-        <li>
-          <button data-layer="characters" data-imagePath="character_base/body.png">Character Base</button>
-        </li>
+      <ul id="characters">
       </ul>
 
       <h2>Costumes</h2>
-      <ul>
-        <li>
-          <button data-layer="costumes" data-imagePath="costumes/shirt.png">Shirt</button>
-        </li>
-        <li>
-          <button data-layer="costumes" data-imagePath="costumes/jacket.png">Jacket</button>
-        </li>
+      <ul id="costumes">
       </ul>
 
       <h2>Emotions</h2>
@@ -49,13 +36,9 @@
 
       const buttonsDiv = document.querySelector('#buttons-div');
       buttonsDiv.addEventListener('click', function(e){
-        console.log('sending showImage message')
-        ipcRenderer.send("showImage", e.target.dataset.layer, e.target.dataset.imagepath);
-      });
-
-      const loadButton = document.querySelector('#image-load-button');
-      loadButton.addEventListener('click', function(){
-        ipcRenderer.send("loadImages");
+        const { layer, imagepath } = e.target.dataset;
+        console.log('sending showImage message', layer, imagepath)
+        ipcRenderer.send("showImage", layer, imagepath);
       });
 
       ipcRenderer.on('loadImages', function(e, layer, files){

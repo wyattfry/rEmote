@@ -5,7 +5,7 @@ const fs = require('fs');
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
-function createMainWindow() {
+async function createMainWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 800,
@@ -15,17 +15,21 @@ function createMainWindow() {
     }
   });
   mainWindow.webContents.openDevTools();
-  mainWindow.loadFile('index.html');
+  await mainWindow.loadFile('index.html');
+  // page has loaded
+  const layerNames = ["backgrounds", "characters", "costumes", "emotions"];
+  layerNames.forEach(l => loadImages(mainWindow, l));
   mainWindow.on('closed', () => mainWindow = null);
-  fs.readdir('emotions', function(err, files){
+}
+
+function loadImages(window, layer) {
+  fs.readdir(layer, function (err, files) {
     if (err) {
       console.error('Could not read directory');
     }
-    console.log(`loaded ${files.length} files. emitting loadImages event`);
-    mainWindow.webContents.send('loadImages', 'emotions', files);
+    mainWindow.webContents.send('loadImages', layer, files);
   });
 }
-// and load the index.html of the app.
 
 let displayWindow;
 function createDisplayWindow() {

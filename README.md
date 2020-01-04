@@ -1,25 +1,28 @@
-TODO
-- click one of many buttons, corresponding png appears in display
+# rEmote
 
-- set image directory, buttons are made for each file in directory
+This is an electron desktop app to dynamically display layered images, designed to be used in a live game streaming context.
+
+## TODO
+
+- set image directory
 - persist directory locations
 - image ignore ability, persists
-
-- have 2 image sets, clothes and emotions
-
-
-- make images able to be
-  - layered (bg, char base, clothes, emotion, back to front respectively)
-  - repositioned and resized
+- images can be repositioned and resized
 - persist new size and position
 
 - animated gifs
 - option to re-show display window if (accidentally) closed
 
-## Display Window
-- should be resizeable
+### Display Window
+
+- should be resizeable, keep aspect ratio? or not to remove bleed?
 - no scroll bars
 
-DONE
+## DONE
+
 - click a button, png appears in display
 - move display to other window (could start here)
+- click one of many buttons, corresponding png appears in display
+- have image sets, background, character, costume and emotions
+- buttons are made for each file in directory
+- image layering (bg, char base, clothes, emotion, back to front respectively)
