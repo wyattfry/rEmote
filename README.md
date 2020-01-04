@@ -4,6 +4,7 @@ This is an electron desktop app to dynamically display layered images, designed 
 
 ## TODO
 
+- make a settings.json file that persists image directory locations
 - set image directory
 - persist directory locations
 - image ignore ability, persists
