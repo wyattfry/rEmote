@@ -11,30 +11,124 @@
     />
     <title>rEmote - Display</title>
     <style>
+      body {
+        overflow: hidden;
+      }
       img {
         position: absolute;
         top: 0px;
         left: 0px;
       }
+      .hidden {
+        display: none;
+      }
+      p#edit-message {
+        position: absolute;
+      }
     </style>
   </head>
   <body>
-    <img id="backgrounds" />
-    <img id="characters" />
-    <img id="costumes" />
-    <img id="emotions" />
+    <div class="image-container">
+      <img id="backgrounds" draggable="false" />
+      <img id="characters" draggable="false" />
+      <img id="costumes" draggable="false" />
+      <img id="emotions" draggable="false" />
+      <p id="edit-message" class="hidden">Editing <button>Save</button></p>
+    </div>
     <script>
       const electron = require("electron");
       const { ipcRenderer } = electron;
       const path = require('path');
 
-      ipcRenderer.on("showImage", function(e, layer, imageDirectory, imageFileName) {
+      let isEditMode = false
+      let mouseIsDragging = false;
+
+      const imageContainer = document.querySelector("div.image-container");
+
+      const editInfo = {
+        imageBeingEdited: null,
+        layer: null,
+        imageFile: null,
+      };
+
+      imageContainer.addEventListener("mousedown", e => {
+        mouseIsDragging = true;
+      });
+
+      imageContainer.addEventListener("mouseup", e => {
+        mouseIsDragging = false;
+      });
+
+      let x1;
+      let y1;
+
+      imageContainer.addEventListener("mousemove", e => {
+        if (isEditMode == false) {
+          return;
+        }
+        if (mouseIsDragging) {
+          if (cursorIsOverImage(e, editInfo.imageBeingEdited) == false) {
+            return;
+          }
+          const deltaX = e.clientX - x1;
+          const deltaY = e.clientY - y1;
+          console.log(deltaX, deltaY);
+          editInfo.imageBeingEdited.style.left = editInfo.imageBeingEdited.offsetLeft + deltaX + "px";
+          editInfo.imageBeingEdited.style.top = editInfo.imageBeingEdited.offsetTop + deltaY + "px";
+        }
+        x1 = e.clientX;
+        y1 = e.clientY;
+      });
+
+      function cursorIsOverImage(e, image) {
+        if (e.clientX < image.offsetLeft || e.clientX > image.offsetLeft + image.offsetWidth) {
+          return false;
+        }
+        if (e.clientY < image.offsetTop || e.clientY > image.offsetTop + image.offsetHeight) {
+          return false;
+        }
+        return true;
+      }
+
+      ipcRenderer.on("showImage", function(e, layer, imageDirectory, imageFileName, left = 0, top = 0) {
         const imageEl = document.querySelector("img#" + layer);
         if (imageEl == null) {
           console.log("Found no <img> element with id", layer);
         } else {
           imageEl.src = path.join(imageDirectory, imageFileName);
+          imageEl.style.left = left + "px";
+          imageEl.style.top = top + "px";
         }
+      });
+
+      ipcRenderer.on("editImageMode:true", function(e, layer, image){
+        // Show edit message and Save button
+        document.querySelector("p#edit-message").classList.remove("hidden");
+        isEditMode = true;
+        imageBeingEdited = document.querySelector("img#" + layer);
+        console.log("edit mode on", image);
+        editInfo.imageBeingEdited = document.querySelector("img#" + layer);
+        editInfo.layer = layer;
+        editInfo.imageFile = image;
+      });
+
+      const editSaveButton = document.querySelector("#edit-message > button");
+      editSaveButton.addEventListener("click", () => {
+        if (isEditMode == false) {
+          return;
+        }
+        isEditMode = false;
+        ipcRenderer.send(
+          "editImageMode:false",
+          editInfo.layer,
+          editInfo.imageFile,
+          editInfo.imageBeingEdited.offsetLeft,
+          editInfo.imageBeingEdited.offsetTop
+        );
+        document.querySelector("p#edit-message").classList.add("hidden");
+        editInfo.imageBeingEdited = null;
+        editInfo.layer = null;
+        editInfo.imageFile = null;
       });
     </script>
   </body>

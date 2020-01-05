@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
+const path = require('path');
 
 let settings = {};
 
@@ -12,9 +13,11 @@ settings.imageDirectories = {
   "emotions": null,
 };
 
+settings.transformInfo = {};
+
 app.on('ready', function () {
   loadOrCreateSettings(settingsFileExisted => {
-    createMainWindow(()=>{
+    createMainWindow(() => {
       if (settingsFileExisted) {
         // If any image directories saved in loaded settings file, load
         // those images as buttons in control window.
@@ -48,7 +51,7 @@ app.on('activate', () => {
 function loadOrCreateSettings(callback) {
   fs.exists(settings.settingsFileName, (exists) => {
     if (exists) {
-      fs.readFile(settings.settingsFileName, function(err, data){
+      fs.readFile(settings.settingsFileName, function (err, data) {
         if (err) {
           console.error("Error reading settings.json");
           // does it not exist? thus create?
@@ -60,7 +63,7 @@ function loadOrCreateSettings(callback) {
     } else {
       callback(false);
       // create settings file if it does not already exist
-      fs.writeFile(settings.settingsFileName, JSON.stringify(settings), ()=>{});
+      fs.writeFile(settings.settingsFileName, JSON.stringify(settings), () => { });
     }
   });
 }
@@ -84,11 +87,31 @@ async function createMainWindow(callback) {
 
 // Listen for `showImage` event from mainWindow, emit a new one to the displayWindow
 ipcMain.on('showImage', function (e, layer, fileName) {
-  displayWindow.webContents.send('showImage', layer, settings.imageDirectories[layer], fileName);
+  const fileLocator = path.join(settings.imageDirectories[layer], fileName);
+  let left = 0;
+  let top = 0;
+  if (settings.transformInfo.hasOwnProperty(fileLocator) == true) {
+    left = settings.transformInfo[fileLocator].left;
+    top = settings.transformInfo[fileLocator].top;
+  }
+  displayWindow.webContents.send('showImage', layer, settings.imageDirectories[layer], fileName, left, top);
 });
 
 ipcMain.on('setImageDirectory', function (e, layer) {
   setImageDirectory(layer);
+});
+
+ipcMain.on('editImageMode:true', function (e, layer, image) {
+  displayWindow.webContents.send("editImageMode:true", layer, image);
+});
+
+ipcMain.on("editImageMode:false", function (e, layer, imageFile, left, top) {
+  const fileLocator = path.join(settings.imageDirectories[layer], imageFile);
+  settings.transformInfo[fileLocator] = {
+    left: left,
+    top: top
+  };
+  saveSettings();
 });
 
 // Display Window
@@ -116,6 +139,10 @@ function loadImages(layer) {
   });
 }
 
+function saveSettings() {
+  fs.writeFile(settings.settingsFileName, JSON.stringify(settings), () => { });
+}
+
 function setImageDirectory(layer) {
   dialog.showOpenDialog({
     properties: ['openDirectory'],
@@ -124,7 +151,7 @@ function setImageDirectory(layer) {
       return;
     }
     settings.imageDirectories[layer] = result.filePaths[0];
-    fs.writeFile(settings.settingsFileName, JSON.stringify(settings), ()=>{})
+    saveSettings();
     loadImages(layer);
   });
 }
