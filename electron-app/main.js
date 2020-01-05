@@ -17,7 +17,7 @@ settings.transformInfo = {};
 
 app.on('ready', function () {
   loadOrCreateSettings(settingsFileExisted => {
-    createMainWindow(() => {
+    createControlWindow(() => {
       if (settingsFileExisted) {
         // If any image directories saved in loaded settings file, load
         // those images as buttons in control window.
@@ -44,7 +44,7 @@ app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (controlWindow === null) {
-    createMainWindow();
+    createControlWindow();
   }
 })
 
@@ -72,7 +72,7 @@ function loadOrCreateSettings(callback) {
 // Control Window
 let controlWindow;
 
-async function createMainWindow(callback) {
+async function createControlWindow(callback) {
   controlWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -101,17 +101,18 @@ ipcMain.on('setImageDirectory', function (e, layer) {
   setImageDirectory(layer);
 });
 
-ipcMain.on('editImageMode:true', function (e, layer, image) {
-  displayWindow.webContents.send("editImageMode:true", layer, image);
+ipcMain.on('editImageMode:true', function (e, layer) {
+  displayWindow.webContents.send("editImageMode:true", layer);
 });
 
-ipcMain.on("editImageMode:false", function (e, layer, imageFile, left, top) {
-  const fileLocator = path.join(settings.imageDirectories[layer], imageFile);
+ipcMain.on("editImageMode:false", function (e, imageFile, left, top) {
+  const fileLocator = imageFile;
   settings.transformInfo[fileLocator] = {
     left: left,
     top: top
   };
   saveSettings();
+  controlWindow.webContents.send("editImageMode:false");
 });
 
 // Display Window
@@ -155,6 +156,3 @@ function setImageDirectory(layer) {
     loadImages(layer);
   });
 }
-
-// file:///C:/Users/Wyatt/Projects/rEmote/electron-app/backgrounds/background.png
-// file:///C:/Users/Wyatt/Projects/rEmote/electron-app/background.png

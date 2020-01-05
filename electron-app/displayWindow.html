@@ -48,7 +48,6 @@
       const editInfo = {
         imageBeingEdited: null,
         layer: null,
-        imageFile: null,
       };
 
       imageContainer.addEventListener("mousedown", e => {
@@ -101,15 +100,13 @@
         }
       });
 
-      ipcRenderer.on("editImageMode:true", function(e, layer, image){
+      ipcRenderer.on("editImageMode:true", function(e, layer){
         // Show edit message and Save button
         document.querySelector("p#edit-message").classList.remove("hidden");
         isEditMode = true;
         imageBeingEdited = document.querySelector("img#" + layer);
-        console.log("edit mode on", image);
         editInfo.imageBeingEdited = document.querySelector("img#" + layer);
         editInfo.layer = layer;
-        editInfo.imageFile = image;
       });
 
       const editSaveButton = document.querySelector("#edit-message > button");
@@ -120,15 +117,13 @@
         isEditMode = false;
         ipcRenderer.send(
           "editImageMode:false",
-          editInfo.layer,
-          editInfo.imageFile,
+          editInfo.imageBeingEdited.src,
           editInfo.imageBeingEdited.offsetLeft,
           editInfo.imageBeingEdited.offsetTop
         );
         document.querySelector("p#edit-message").classList.add("hidden");
         editInfo.imageBeingEdited = null;
         editInfo.layer = null;
-        editInfo.imageFile = null;
       });
     </script>
   </body>
