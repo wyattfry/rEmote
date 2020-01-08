@@ -7,6 +7,7 @@ This is an electron desktop app to dynamically display layered images, designed 
 - image ignore ability, persists
 - persist new size and position
 - animated gifs
+- refactor to follow a more mvc like pattern
 
 ### Control Window
 

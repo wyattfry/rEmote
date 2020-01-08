@@ -11,6 +11,9 @@
     />
     <title>rEmote - Display</title>
     <style>
+      html, body {
+        height: 100%;
+      }
       body {
         overflow: hidden;
       }
@@ -25,6 +28,14 @@
       p#edit-message {
         position: absolute;
       }
+      div#bounding-box {
+        border: 3px blue solid;
+        position: absolute;
+      }
+      div.image-container {
+        width: 100%;
+        height: 100%;
+      }
     </style>
   </head>
   <body>
@@ -33,83 +44,155 @@
       <img id="characters" draggable="false" />
       <img id="costumes" draggable="false" />
       <img id="emotions" draggable="false" />
-      <p id="edit-message" class="hidden">Editing <button>Save</button></p>
+      <p id="edit-message" class="hidden">
+        <button id="save">Save</button>
+        <button id="reset">Reset</button>
+        <button id="cancel">Cancel</button>
+      </p>
     </div>
+    <div id="bounding-box" class="hidden"></div>
     <script>
       const electron = require("electron");
       const { ipcRenderer } = electron;
-      const path = require('path');
+      const path = require("path");
 
-      let isEditMode = false
-      let mouseIsDragging = false;
-
-      const imageContainer = document.querySelector("div.image-container");
+      let isEditMode = false;
+      let mouseIsDraggingOverImage = false;
 
       const editInfo = {
         imageBeingEdited: null,
         layer: null,
+        isScale: false,
+        isTranslate: false,
+        originalLocAndScale: {
+          left: null,
+          top: null,
+          height: null,
+        }
       };
 
-      imageContainer.addEventListener("mousedown", e => {
-        mouseIsDragging = true;
+      const boundingBox = document.querySelector("div#bounding-box");
+
+      document.body.addEventListener("mousedown", e => {
+        if (isEditMode == false) {
+          return;
+        }
+        if (cursorIsOverImage(e, editInfo.imageBeingEdited) == false) {
+          return;
+        }
+        mouseIsDraggingOverImage = true;
+        if (cursorIsOverBottomRightCorder(e, editInfo.imageBeingEdited)) {
+          editInfo.isScale = true;
+        } else {
+          editInfo.isTranslate = true;
+        }
       });
 
-      imageContainer.addEventListener("mouseup", e => {
-        mouseIsDragging = false;
+      document.body.addEventListener("mouseup", e => {
+        mouseIsDraggingOverImage = false;
+        editInfo.isScale = false;
+        editInfo.isTranslate = false;
       });
 
       let x1;
       let y1;
 
-      imageContainer.addEventListener("mousemove", e => {
+      document.body.addEventListener("mousemove", e => {
+        updateBoundingBox();
         if (isEditMode == false) {
           return;
         }
-        if (mouseIsDragging) {
-          if (cursorIsOverImage(e, editInfo.imageBeingEdited) == false) {
-            return;
-          }
+        if (mouseIsDraggingOverImage == true) {
           const deltaX = e.clientX - x1;
           const deltaY = e.clientY - y1;
-          console.log(deltaX, deltaY);
-          editInfo.imageBeingEdited.style.left = editInfo.imageBeingEdited.offsetLeft + deltaX + "px";
-          editInfo.imageBeingEdited.style.top = editInfo.imageBeingEdited.offsetTop + deltaY + "px";
+          if (editInfo.isScale == true) {
+            // scale
+            editInfo.imageBeingEdited.style.height =
+              editInfo.imageBeingEdited.offsetHeight + deltaY + "px";
+          } else if (editInfo.isTranslate == true) {
+            // translate
+            editInfo.imageBeingEdited.style.left =
+              editInfo.imageBeingEdited.offsetLeft + deltaX + "px";
+            editInfo.imageBeingEdited.style.top =
+              editInfo.imageBeingEdited.offsetTop + deltaY + "px";
+          }
         }
         x1 = e.clientX;
         y1 = e.clientY;
       });
 
       function cursorIsOverImage(e, image) {
-        if (e.clientX < image.offsetLeft || e.clientX > image.offsetLeft + image.offsetWidth) {
+        if (
+          e.clientX < image.offsetLeft ||
+          e.clientX > image.offsetLeft + image.offsetWidth
+        ) {
           return false;
         }
-        if (e.clientY < image.offsetTop || e.clientY > image.offsetTop + image.offsetHeight) {
+        if (
+          e.clientY < image.offsetTop ||
+          e.clientY > image.offsetTop + image.offsetHeight
+        ) {
           return false;
         }
         return true;
       }
 
-      ipcRenderer.on("showImage", function(e, layer, imageDirectory, imageFileName, left = 0, top = 0) {
+      function cursorIsOverBottomRightCorder(e, image) {
+        const fudgeFactor = 20;
+        const bottomCornerX = image.offsetLeft + image.offsetWidth;
+        const bottomCornerY = image.offsetTop + image.offsetHeight;
+        if (
+          e.clientX < bottomCornerX - fudgeFactor ||
+          e.clientX > bottomCornerX + fudgeFactor
+        ) {
+          return false;
+        }
+        if (
+          e.clientY < bottomCornerY - fudgeFactor ||
+          e.clientY > bottomCornerY + fudgeFactor
+        ) {
+          return false;
+        }
+        console.log("cursor over bottom right corner");
+        return true;
+      }
+
+      ipcRenderer.on("showImage", function(
+        e,
+        layer,
+        imageDirectory,
+        imageFileName,
+        left = 0,
+        top = 0,
+        height
+      ) {
         const imageEl = document.querySelector("img#" + layer);
         if (imageEl == null) {
           console.log("Found no <img> element with id", layer);
         } else {
           imageEl.src = path.join(imageDirectory, imageFileName);
+          imageEl.dataset.imagePath = path.join(imageDirectory, imageFileName);
           imageEl.style.left = left + "px";
           imageEl.style.top = top + "px";
+          imageEl.style.height = height != null ? height + "px" : "unset";
+          editInfo.originalLocAndScale.top = top;
+          editInfo.originalLocAndScale.left = left;
+          editInfo.originalLocAndScale.height = height;
         }
       });
 
-      ipcRenderer.on("editImageMode:true", function(e, layer){
+      ipcRenderer.on("editImageMode:true", function(e, layer) {
         // Show edit message and Save button
         document.querySelector("p#edit-message").classList.remove("hidden");
+        updateBoundingBox();
+        document.querySelector("div#bounding-box").classList.remove("hidden");
         isEditMode = true;
         imageBeingEdited = document.querySelector("img#" + layer);
         editInfo.imageBeingEdited = document.querySelector("img#" + layer);
         editInfo.layer = layer;
       });
 
-      const editSaveButton = document.querySelector("#edit-message > button");
+      const editSaveButton = document.querySelector("button#save");
       editSaveButton.addEventListener("click", () => {
         if (isEditMode == false) {
           return;
@@ -117,14 +200,51 @@
         isEditMode = false;
         ipcRenderer.send(
           "editImageMode:false",
-          editInfo.imageBeingEdited.src,
+          editInfo.imageBeingEdited.dataset.imagePath,
           editInfo.imageBeingEdited.offsetLeft,
-          editInfo.imageBeingEdited.offsetTop
+          editInfo.imageBeingEdited.offsetTop,
+          editInfo.imageBeingEdited.offsetHeight
         );
         document.querySelector("p#edit-message").classList.add("hidden");
+        document.querySelector("div#bounding-box").classList.add("hidden");
         editInfo.imageBeingEdited = null;
         editInfo.layer = null;
       });
+
+      const editResetButton = document.querySelector("button#reset");
+      editResetButton.addEventListener("click", () => {
+        resetImage();
+      });
+
+      const editCancelButton = document.querySelector("button#cancel");
+      editCancelButton.addEventListener("click", () => {
+        if (isEditMode == false) {
+          return;
+        }
+        isEditMode = false;
+        ipcRenderer.send("editImageMode:false");
+        document.querySelector("p#edit-message").classList.add("hidden");
+        resetImage();
+        editInfo.imageBeingEdited = null;
+        editInfo.layer = null;
+      });
+
+      function resetImage() {
+        editInfo.imageBeingEdited.style.top = editInfo.originalLocAndScale.top + "px";
+        editInfo.imageBeingEdited.style.left =
+          editInfo.originalLocAndScale.left + "px";
+      }
+
+      function updateBoundingBox(element = editInfo.imageBeingEdited) {
+        const left = element.offsetLeft;
+        const top = element.offsetTop;
+        const width = element.offsetWidth;
+        const height = element.offsetHeight;
+        boundingBox.style.left = left + "px";
+        boundingBox.style.top = top + "px";
+        boundingBox.style.width = width + "px";
+        boundingBox.style.height = height + "px";
+      }
     </script>
   </body>
 </html>

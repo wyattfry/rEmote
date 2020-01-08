@@ -90,11 +90,13 @@ ipcMain.on('showImage', function (e, layer, fileName) {
   const fileLocator = path.join(settings.imageDirectories[layer], fileName);
   let left = 0;
   let top = 0;
+  let height = null;
   if (settings.transformInfo.hasOwnProperty(fileLocator) == true) {
     left = settings.transformInfo[fileLocator].left;
     top = settings.transformInfo[fileLocator].top;
+    height = settings.transformInfo[fileLocator].height;
   }
-  displayWindow.webContents.send('showImage', layer, settings.imageDirectories[layer], fileName, left, top);
+  displayWindow.webContents.send('showImage', layer, settings.imageDirectories[layer], fileName, left, top, height);
 });
 
 ipcMain.on('setImageDirectory', function (e, layer) {
@@ -105,13 +107,17 @@ ipcMain.on('editImageMode:true', function (e, layer) {
   displayWindow.webContents.send("editImageMode:true", layer);
 });
 
-ipcMain.on("editImageMode:false", function (e, imageFile, left, top) {
-  const fileLocator = imageFile;
-  settings.transformInfo[fileLocator] = {
-    left: left,
-    top: top
-  };
-  saveSettings();
+ipcMain.on("editImageMode:false", function (e, imageFile, left, top, height) {
+  if (imageFile != null) {
+    console.log(`Saving image '${imageFile}' at left ${left}, top ${top}.`);
+    const fileLocator = imageFile;
+    settings.transformInfo[fileLocator] = {
+      left: left,
+      top: top,
+      height: height,
+    };
+    saveSettings();
+  }
   controlWindow.webContents.send("editImageMode:false");
 });
 
@@ -141,7 +147,7 @@ function loadImages(layer) {
 }
 
 function saveSettings() {
-  fs.writeFile(settings.settingsFileName, JSON.stringify(settings), () => { });
+  fs.writeFile(settings.settingsFileName, JSON.stringify(settings), () => {console.log("Saved settings.")});
 }
 
 function setImageDirectory(layer) {
