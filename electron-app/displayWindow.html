@@ -81,7 +81,7 @@
           return;
         }
         mouseIsDraggingOverImage = true;
-        if (cursorIsOverBottomRightCorder(e, editInfo.imageBeingEdited)) {
+        if (cursorIsOverBottomRightCorner(e, editInfo.imageBeingEdited)) {
           editInfo.isScale = true;
         } else {
           editInfo.isTranslate = true;
@@ -98,11 +98,12 @@
       let y1;
 
       document.body.addEventListener("mousemove", e => {
-        updateBoundingBox();
+
         if (isEditMode == false) {
           return;
         }
         if (mouseIsDraggingOverImage == true) {
+          updateBoundingBox(); 
           const deltaX = e.clientX - x1;
           const deltaY = e.clientY - y1;
           if (editInfo.isScale == true) {
@@ -137,7 +138,7 @@
         return true;
       }
 
-      function cursorIsOverBottomRightCorder(e, image) {
+      function cursorIsOverBottomRightCorner(e, image) {
         const fudgeFactor = 20;
         const bottomCornerX = image.offsetLeft + image.offsetWidth;
         const bottomCornerY = image.offsetTop + image.offsetHeight;
@@ -184,11 +185,12 @@
       ipcRenderer.on("editImageMode:true", function(e, layer) {
         // Show edit message and Save button
         document.querySelector("p#edit-message").classList.remove("hidden");
-        updateBoundingBox();
         document.querySelector("div#bounding-box").classList.remove("hidden");
         isEditMode = true;
+        console.log('layer', layer)
         imageBeingEdited = document.querySelector("img#" + layer);
         editInfo.imageBeingEdited = document.querySelector("img#" + layer);
+        updateBoundingBox();
         editInfo.layer = layer;
       });
 
@@ -224,6 +226,8 @@
         isEditMode = false;
         ipcRenderer.send("editImageMode:false");
         document.querySelector("p#edit-message").classList.add("hidden");
+        document.querySelector("div#bounding-box").classList.add("hidden");
+
         resetImage();
         editInfo.imageBeingEdited = null;
         editInfo.layer = null;
@@ -235,11 +239,16 @@
           editInfo.originalLocAndScale.left + "px";
       }
 
-      function updateBoundingBox(element = editInfo.imageBeingEdited) {
-        const left = element.offsetLeft;
-        const top = element.offsetTop;
-        const width = element.offsetWidth;
-        const height = element.offsetHeight;
+      function updateBoundingBox() {
+        if(editInfo.imageBeingEdited === null) {
+          console.log('image being edited is null', editInfo.imageBeingEdited)
+          return;
+        }
+        console.log('not null???')
+        const left = editInfo.imageBeingEdited.offsetLeft;
+        const top = editInfo.imageBeingEdited.offsetTop;
+        const width = editInfo.imageBeingEdited.offsetWidth;
+        const height = editInfo.imageBeingEdited.offsetHeight;
         boundingBox.style.left = left + "px";
         boundingBox.style.top = top + "px";
         boundingBox.style.width = width + "px";
