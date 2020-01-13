@@ -11,7 +11,8 @@
     />
     <title>rEmote - Display</title>
     <style>
-      html, body {
+      html,
+      body {
         height: 100%;
       }
       body {
@@ -29,28 +30,50 @@
         position: absolute;
       }
       div#bounding-box {
-        border: 3px blue solid;
+        border: 1px blue solid;
         position: absolute;
+        cursor: move;
+      }
+      #bounding-box > div {
+        border: inherit;
+        position: relative;
+        width: 10px;
+        height: 10px;
+        background-color: white;
+      }
+      div.nw-resize {
+        cursor: nw-resize;
+      }
+      div.ne-resize {
+        cursor: ne-resize;
       }
       div.image-container {
         width: 100%;
         height: 100%;
       }
+      .noselect {
+        user-select: none;
+      }
+      .transparent {
+        opacity: 0.8;
+      }
     </style>
   </head>
-  <body>
+  <body class="noselect" draggable="false">
     <div class="image-container">
-      <img id="backgrounds" draggable="false" />
-      <img id="characters" draggable="false" />
-      <img id="costumes" draggable="false" />
-      <img id="emotions" draggable="false" />
+      <img id="backgrounds" />
+      <img id="characters" />
+      <img id="emotions" />
+      <img id="costumes" />
+      <div id="bounding-box" class="hidden">
+        <div id="bottom-right" class="nw-resize"></div>
+      </div>
       <p id="edit-message" class="hidden">
         <button id="save">Save</button>
         <button id="reset">Reset</button>
         <button id="cancel">Cancel</button>
       </p>
     </div>
-    <div id="bounding-box" class="hidden"></div>
     <script>
       const electron = require("electron");
       const { ipcRenderer } = electron;
@@ -67,7 +90,7 @@
         originalLocAndScale: {
           left: null,
           top: null,
-          height: null,
+          height: null
         }
       };
 
@@ -98,12 +121,11 @@
       let y1;
 
       document.body.addEventListener("mousemove", e => {
-
         if (isEditMode == false) {
           return;
         }
         if (mouseIsDraggingOverImage == true) {
-          updateBoundingBox(); 
+          updateBoundingBox();
           const deltaX = e.clientX - x1;
           const deltaY = e.clientY - y1;
           if (editInfo.isScale == true) {
@@ -187,11 +209,10 @@
         document.querySelector("p#edit-message").classList.remove("hidden");
         document.querySelector("div#bounding-box").classList.remove("hidden");
         isEditMode = true;
-        console.log('layer', layer)
-        imageBeingEdited = document.querySelector("img#" + layer);
         editInfo.imageBeingEdited = document.querySelector("img#" + layer);
-        updateBoundingBox();
+        editInfo.imageBeingEdited.classList.add("transparent");
         editInfo.layer = layer;
+        updateBoundingBox();
       });
 
       const editSaveButton = document.querySelector("button#save");
@@ -207,6 +228,7 @@
           editInfo.imageBeingEdited.offsetTop,
           editInfo.imageBeingEdited.offsetHeight
         );
+        editInfo.imageBeingEdited.classList.remove("transparent");
         document.querySelector("p#edit-message").classList.add("hidden");
         document.querySelector("div#bounding-box").classList.add("hidden");
         editInfo.imageBeingEdited = null;
@@ -234,25 +256,36 @@
       });
 
       function resetImage() {
-        editInfo.imageBeingEdited.style.top = editInfo.originalLocAndScale.top + "px";
+        editInfo.imageBeingEdited.style.top =
+          editInfo.originalLocAndScale.top + "px";
         editInfo.imageBeingEdited.style.left =
           editInfo.originalLocAndScale.left + "px";
       }
 
       function updateBoundingBox() {
-        if(editInfo.imageBeingEdited === null) {
-          console.log('image being edited is null', editInfo.imageBeingEdited)
+        if (editInfo.imageBeingEdited === null) {
+          console.log("image being edited is null", editInfo.imageBeingEdited);
           return;
         }
-        console.log('not null???')
+        const magicNumberToMakeBoxSameSizeAsImageBeingEdited = 2;
         const left = editInfo.imageBeingEdited.offsetLeft;
         const top = editInfo.imageBeingEdited.offsetTop;
-        const width = editInfo.imageBeingEdited.offsetWidth;
-        const height = editInfo.imageBeingEdited.offsetHeight;
+        const width =
+          editInfo.imageBeingEdited.offsetWidth -
+          magicNumberToMakeBoxSameSizeAsImageBeingEdited;
+        const height =
+          editInfo.imageBeingEdited.offsetHeight -
+          magicNumberToMakeBoxSameSizeAsImageBeingEdited;
         boundingBox.style.left = left + "px";
         boundingBox.style.top = top + "px";
         boundingBox.style.width = width + "px";
         boundingBox.style.height = height + "px";
+
+        const bottomRightScaleHandle = document.querySelector(
+          "div#bottom-right"
+        );
+        bottomRightScaleHandle.style.top = height - 7 + "px";
+        bottomRightScaleHandle.style.left = width - 7 + "px";
       }
     </script>
   </body>
