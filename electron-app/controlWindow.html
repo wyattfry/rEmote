@@ -7,32 +7,59 @@
       http-equiv="Content-Security-Policy"
       content="script-src 'self' 'unsafe-inline';"
     />
+    <style>
+      ul.image-buttons {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      li.image-buttons {
+        list-style: none;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
   </head>
   <body>
     <div id="buttons-div">
       <h2>Backgrounds</h2>
-      <a href="#" class="image-directory" data-layer="backgrounds"
-        >Set a directory</a
-      >
-      <ul id="backgrounds"></ul>
+      <div class="layer-options" data-layer="backgrounds">
+        <button data-layer="backgrounds" class="image-directory">
+          Set a directory
+        </button>
+        <button data-layer="backgrounds" class="hidden edit-button">
+          Edit
+        </button>
+      </div>
+      <ul id="backgrounds" class="image-buttons"></ul>
 
       <h2>Characters</h2>
-      <a href="#" class="image-directory" data-layer="characters"
-        >Set a directory</a
-      >
-      <ul id="characters"></ul>
-
-      <h2>Costumes</h2>
-      <a href="#" class="image-directory" data-layer="costumes"
-        >Set a directory</a
-      >
-      <ul id="costumes"></ul>
+      <div class="layer-options" data-layer="characters">
+        <button data-layer="characters" class="image-directory">
+          Set a directory
+        </button>
+        <button data-layer="characters" class="hidden edit-button">Edit</button>
+      </div>
+      <ul id="characters" class="image-buttons"></ul>
 
       <h2>Emotions</h2>
-      <a href="#" class="image-directory" data-layer="emotions"
-        >Set a directory</a
-      >
-      <ul id="emotions"></ul>
+      <div class="layer-options" data-layer="emotions">
+        <button data-layer="emotions" class="image-directory">
+          Set a directory
+        </button>
+        <button data-layer="emotions" class="hidden edit-button">Edit</button>
+      </div>
+      <ul id="emotions" class="image-buttons"></ul>
+
+      <h2>Costumes</h2>
+      <div class="layer-options" data-layer="costumes">
+        <button data-layer="costumes" class="image-directory">
+          Set a directory
+        </button>
+        <button data-layer="costumes" class="hidden edit-button">Edit</button>
+      </div>
+      <ul id="costumes" class="image-buttons"></ul>
     </div>
 
     <script>
@@ -63,23 +90,42 @@
       function appendButtonsToLayer(layer, files) {
         // update directory selection text
         const directoryText = document.querySelector(
-          `a.image-directory[data-layer='${layer}']`
+          `button.image-directory[data-layer='${layer}']`
         );
         directoryText.innerText = "Change the directory";
+        const editButton = document.querySelector(
+          `button.edit-button[data-layer='${layer}']`
+        );
+        editButton.classList.remove("hidden");
+        editButton.addEventListener("click", function() {
+          document
+            .querySelectorAll("button.edit-button")
+            .forEach(b => (b.disabled = true));
+          ipcRenderer.send("editImageMode:true", layer);
+        });
         // create image selection buttons
         const ul = document.querySelector("ul#" + layer);
         ul.innerHTML = "";
         files.forEach(f => {
           const li = document.createElement("li");
+          li.classList.add("image-buttons");
           const button = document.createElement("button");
           button.classList.add("show-image-button");
           button.innerText = f.split(".")[0];
           button.dataset.layer = layer;
           button.dataset.fileName = f;
           li.appendChild(button);
+
+          li.appendChild(document.createTextNode(" "));
+
           ul.appendChild(li);
         });
       }
+
+      ipcRenderer.on("editImageMode:false", () => {
+        const editButtons = document.querySelectorAll("button.edit-button");
+        editButtons.forEach(b => (b.disabled = false));
+      });
     </script>
   </body>
 </html>

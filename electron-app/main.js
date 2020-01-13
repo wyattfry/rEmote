@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
+const path = require('path');
 
 let settings = {};
 
@@ -12,9 +13,11 @@ settings.imageDirectories = {
   "emotions": null,
 };
 
+settings.transformInfo = {};
+
 app.on('ready', function () {
   loadOrCreateSettings(settingsFileExisted => {
-    createMainWindow(()=>{
+    createControlWindow(() => {
       if (settingsFileExisted) {
         // If any image directories saved in loaded settings file, load
         // those images as buttons in control window.
@@ -41,14 +44,14 @@ app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (controlWindow === null) {
-    createMainWindow();
+    createControlWindow();
   }
 })
 
 function loadOrCreateSettings(callback) {
   fs.exists(settings.settingsFileName, (exists) => {
     if (exists) {
-      fs.readFile(settings.settingsFileName, function(err, data){
+      fs.readFile(settings.settingsFileName, function (err, data) {
         if (err) {
           console.error("Error reading settings.json");
           // does it not exist? thus create?
@@ -60,7 +63,7 @@ function loadOrCreateSettings(callback) {
     } else {
       callback(false);
       // create settings file if it does not already exist
-      fs.writeFile(settings.settingsFileName, JSON.stringify(settings), ()=>{});
+      fs.writeFile(settings.settingsFileName, JSON.stringify(settings), () => { });
     }
   });
 }
@@ -69,7 +72,7 @@ function loadOrCreateSettings(callback) {
 // Control Window
 let controlWindow;
 
-async function createMainWindow(callback) {
+async function createControlWindow(callback) {
   controlWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -84,11 +87,38 @@ async function createMainWindow(callback) {
 
 // Listen for `showImage` event from mainWindow, emit a new one to the displayWindow
 ipcMain.on('showImage', function (e, layer, fileName) {
-  displayWindow.webContents.send('showImage', layer, settings.imageDirectories[layer], fileName);
+  const fileLocator = path.join(settings.imageDirectories[layer], fileName);
+  let left = 0;
+  let top = 0;
+  let height = null;
+  if (settings.transformInfo.hasOwnProperty(fileLocator) == true) {
+    left = settings.transformInfo[fileLocator].left;
+    top = settings.transformInfo[fileLocator].top;
+    height = settings.transformInfo[fileLocator].height;
+  }
+  displayWindow.webContents.send('showImage', layer, settings.imageDirectories[layer], fileName, left, top, height);
 });
 
 ipcMain.on('setImageDirectory', function (e, layer) {
   setImageDirectory(layer);
+});
+
+ipcMain.on('editImageMode:true', function (e, layer) {
+  displayWindow.webContents.send("editImageMode:true", layer);
+});
+
+ipcMain.on("editImageMode:false", function (e, imageFile, left, top, height) {
+  if (imageFile != null) {
+    console.log(`Saving image '${imageFile}' at left ${left}, top ${top}.`);
+    const fileLocator = imageFile;
+    settings.transformInfo[fileLocator] = {
+      left: left,
+      top: top,
+      height: height,
+    };
+    saveSettings();
+  }
+  controlWindow.webContents.send("editImageMode:false");
 });
 
 // Display Window
@@ -116,6 +146,10 @@ function loadImages(layer) {
   });
 }
 
+function saveSettings() {
+  fs.writeFile(settings.settingsFileName, JSON.stringify(settings), () => {console.log("Saved settings.")});
+}
+
 function setImageDirectory(layer) {
   dialog.showOpenDialog({
     properties: ['openDirectory'],
@@ -124,10 +158,7 @@ function setImageDirectory(layer) {
       return;
     }
     settings.imageDirectories[layer] = result.filePaths[0];
-    fs.writeFile(settings.settingsFileName, JSON.stringify(settings), ()=>{})
+    saveSettings();
     loadImages(layer);
   });
 }
-
-// file:///C:/Users/Wyatt/Projects/rEmote/electron-app/backgrounds/background.png
-// file:///C:/Users/Wyatt/Projects/rEmote/electron-app/background.png
