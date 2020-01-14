@@ -72,6 +72,8 @@
         <button id="save">Save</button>
         <button id="reset">Reset</button>
         <button id="cancel">Cancel</button>
+        x: <span id="left">0</span> y: <span id="top">0</span> height:
+        <span id="height">default</span>
       </p>
     </div>
     <script>
@@ -130,14 +132,21 @@
           const deltaY = e.clientY - y1;
           if (editInfo.isScale == true) {
             // scale
-            editInfo.imageBeingEdited.style.height =
+            const newHeight =
               editInfo.imageBeingEdited.offsetHeight + deltaY + "px";
+            editInfo.imageBeingEdited.style.height = newHeight;
+            document.querySelector("span#height").innerText = newHeight;
           } else if (editInfo.isTranslate == true) {
             // translate
-            editInfo.imageBeingEdited.style.left =
+            const newLeft =
               editInfo.imageBeingEdited.offsetLeft + deltaX + "px";
-            editInfo.imageBeingEdited.style.top =
+            document.querySelector("span#left").innerText = newLeft;
+            editInfo.imageBeingEdited.style.left = newLeft;
+
+            const newTop =
               editInfo.imageBeingEdited.offsetTop + deltaY + "px";
+            editInfo.imageBeingEdited.style.top = newTop;
+            document.querySelector("span#top").innerText = newTop;
           }
         }
         x1 = e.clientX;
@@ -192,7 +201,12 @@
         const imageEl = document.querySelector("img#" + layer);
         if (imageEl == null) {
           console.log("Found no <img> element with id", layer);
+        } else if (imageFileName == "") {
+          imageEl.src = "";
         } else {
+          document.querySelector("span#left").innerText = left + "px";
+          document.querySelector("span#top").innerText = top + "px";
+          document.querySelector("span#height").innerText = height != null ? height + "px" : "0px";
           imageEl.src = path.join(imageDirectory, imageFileName);
           imageEl.dataset.imagePath = path.join(imageDirectory, imageFileName);
           imageEl.style.left = left + "px";

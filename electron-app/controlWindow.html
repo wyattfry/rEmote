@@ -8,6 +8,15 @@
       content="script-src 'self' 'unsafe-inline';"
     />
     <style>
+      body {
+        font-family: sans-serif;
+      }
+      .noselect {
+        user-select: none;
+      }
+      div.layer-options {
+        display: inline-block;
+      }
       ul.image-buttons {
         display: flex;
         flex-direction: row;
@@ -34,9 +43,9 @@
       }
     </style>
   </head>
-  <body>
+  <body class="noselect" draggable="false">
     <div id="buttons-div">
-      <h2>Backgrounds</h2>
+      <span>Backgrounds</span>
       <div class="layer-options" data-layer="backgrounds">
         <button data-layer="backgrounds" class="image-directory">
           Set a directory
@@ -47,7 +56,7 @@
       </div>
       <ul id="backgrounds" class="image-buttons"></ul>
 
-      <h2>Characters</h2>
+      <span>Characters</span>
       <div class="layer-options" data-layer="characters">
         <button data-layer="characters" class="image-directory">
           Set a directory
@@ -56,7 +65,7 @@
       </div>
       <ul id="characters" class="image-buttons"></ul>
 
-      <h2>Emotions</h2>
+      <span>Emotions</span>
       <div class="layer-options" data-layer="emotions">
         <button data-layer="emotions" class="image-directory">
           Set a directory
@@ -65,7 +74,7 @@
       </div>
       <ul id="emotions" class="image-buttons"></ul>
 
-      <h2>Costumes</h2>
+      <span>Costumes</span>
       <div class="layer-options" data-layer="costumes">
         <button data-layer="costumes" class="image-directory">
           Set a directory
@@ -125,16 +134,23 @@
         const ul = document.querySelector("ul#" + layer);
         ul.innerHTML = "";
         // start with adding a "None" option
+        files.unshift("");
         files.forEach(f => {
           const li = document.createElement("li");
           li.classList.add("image-buttons");
           const thumbnailImage = document.createElement("img");
           thumbnailImage.classList.add("thumbnail");
-          thumbnailImage.src = path.join(directory, f);
+          if (f != "") {
+            thumbnailImage.src = path.join(directory, f);
+            thumbnailImage.innerText = f.split(".")[0];
+            thumbnailImage.dataset.fileName = f;
+          } else {
+            thumbnailImage.src = path.join("no-image.png");
+            thumbnailImage.innerText = f.split(".")[0];
+            thumbnailImage.dataset.fileName = f;
+          }
           thumbnailImage.classList.add("show-image-button");
-          thumbnailImage.innerText = f.split(".")[0];
           thumbnailImage.dataset.layer = layer;
-          thumbnailImage.dataset.fileName = f;
           const imgContainerDiv = document.createElement("div");
           imgContainerDiv.classList.add("thumbnail-container");
           imgContainerDiv.appendChild(thumbnailImage);
