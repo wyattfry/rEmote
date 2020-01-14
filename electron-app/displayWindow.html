@@ -185,7 +185,6 @@
         ) {
           return false;
         }
-        console.log("cursor over bottom right corner");
         return true;
       }
 
@@ -252,6 +251,7 @@
       const editResetButton = document.querySelector("button#reset");
       editResetButton.addEventListener("click", () => {
         resetImage();
+        updateBoundingBox();
       });
 
       const editCancelButton = document.querySelector("button#cancel");

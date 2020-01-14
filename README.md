@@ -8,12 +8,17 @@ This is an electron desktop app to dynamically display layered images, designed 
 
 ### Control Window
 
-- "None" option for emotion and costume layer, disables Edit btn when selected
+- lock all ctrl window buttons when in edit mode
+- mouse-over animation to indicate 'clickable'
+- image title attributes to show info e.g. filename, dimensions
+- visual indicator, decorator, whether image has been edited
 - option to re-show display window if (accidentally) closed
 - make gui look like wireframe, UI aesthetic overhaul, use library? e.g. materialize? bootstrap?
 
 ### Display Window
 
+- refine UI of x,y,height display in edit mode (e.g. status bar at bottom)
+- make little resize box more easily clickable
 
 ## DONE
 
@@ -33,3 +38,5 @@ This is an electron desktop app to dynamically display layered images, designed 
 - should be resizeable, keep aspect ratio? or not to remove bleed?
 - bounding box behind edit buttons
 - make buttons thumbnails
+- when in edit mode, clicking 'reset' should also move bounding box
+- "None" option for emotion and costume layer, disables Edit btn when selected
