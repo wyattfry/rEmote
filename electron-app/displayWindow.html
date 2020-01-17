@@ -78,6 +78,7 @@
       const electron = require("electron");
       const { ipcRenderer } = electron;
       const path = require("path");
+      const displayController = require("./displayController.js");
 
       let isEditMode = false;
       let mouseIsDraggingOverImage = false;
@@ -95,6 +96,13 @@
       };
 
       const boundingBox = document.querySelector("div#bounding-box");
+
+      document.body.addEventListener("keydown", function(e){
+        if (isEditMode) {
+          displayController.moveElementWithArrowKeys(e, editInfo.imageBeingEdited);
+          displayController.moveElementWithArrowKeys(e, boundingBox);
+        }
+      });
 
       document.body.addEventListener("mousedown", e => {
         if (isEditMode == false) {
