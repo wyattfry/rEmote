@@ -1,15 +1,18 @@
 {
-  "name": "emote_board",
+  "name": "remote",
+  "productName": "rEmote",
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "build_win": "electron-packager . rEmote --platform=win32 --arch=x64"
   },
   "author": "Wyatt Fry",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^7.1.7"
+    "electron": "^7.1.7",
+    "electron-packager": "^14.2.0"
   }
 }
