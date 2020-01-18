@@ -142,7 +142,7 @@ function loadImages(layer) {
     if (err) {
       console.error('Could not read directory', layer);
     }
-    controlWindow.webContents.send('loadImages', layer, files);
+    controlWindow.webContents.send('loadImages', layer, files, settings.imageDirectories[layer]);
   });
 }
 
