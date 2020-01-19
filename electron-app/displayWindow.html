@@ -59,8 +59,8 @@
       }
       div#keyboard-tip {
         position: absolute;
-        top: 0;
-        right: 0;
+        bottom: 0;
+        left: 0;
         padding: 10px;
       }
     </style>
@@ -89,7 +89,9 @@
       const path = require("path");
       const displayController = require("./displayController.js");
 
-      document.querySelector("div#keyboard-tip").innerText = displayController.getKeyboardTipMessage();
+      document.querySelector(
+        "div#keyboard-tip"
+      ).innerText = displayController.getKeyboardTipMessage();
 
       let isEditMode = false;
       let mouseIsDraggingOverImage = false;
@@ -110,32 +112,33 @@
 
       let metaKeyDown = false;
 
-      const keyCodes = {
-        'ctrl': '17',
-        'meta': '17',
-      }
-
-      document.body.addEventListener("keydown", function(e){
-        if (e.keyCode == keyCodes.meta) || (e.keyCode == keyCodes.ctrl) {
+      document.body.addEventListener("keydown", function(e) {
+        if (e.key == "Meta" || e.key == "Control") {
           metaKeyDown = true;
         }
       });
 
-      document.body.addEventListener("keyup", function(e){
-        if (e.keyCode == keyCodes.meta) {
+      document.body.addEventListener("keyup", function(e) {
+        if (e.key == "Meta" || e.key == "Control") {
           metaKeyDown = false;
         }
       });
 
-      document.body.addEventListener("keydown", function(e){
+      document.body.addEventListener("keydown", function(e) {
         if (isEditMode) {
-          if (superKeyDown === true) {
-            displayController.resizeElementWithArrowKeys(e, editInfo.imageBeingEdited);
-            updateBoundingBox();
+          if (metaKeyDown === true) {
+            displayController.resizeElementWithArrowKeys(
+              e,
+              editInfo.imageBeingEdited
+            );
           } else {
-            displayController.moveElementWithArrowKeys(e, editInfo.imageBeingEdited);
-            updateBoundingBox();
+            displayController.moveElementWithArrowKeys(
+              e,
+              editInfo.imageBeingEdited
+            );
           }
+          updateBoundingBox();
+          updateEditInfoMessage();
         }
       });
 
@@ -168,27 +171,24 @@
           return;
         }
         if (mouseIsDraggingOverImage == true) {
-          updateBoundingBox();
           const deltaX = e.clientX - x1;
           const deltaY = e.clientY - y1;
           if (editInfo.isScale == true) {
             // scale
             const newHeight =
-              editInfo.imageBeingEdited.offsetHeight + deltaY + "px";
+            editInfo.imageBeingEdited.offsetHeight + deltaY + "px";
             editInfo.imageBeingEdited.style.height = newHeight;
-            document.querySelector("span#height").innerText = newHeight;
           } else if (editInfo.isTranslate == true) {
             // translate
             const newLeft =
-              editInfo.imageBeingEdited.offsetLeft + deltaX + "px";
-            document.querySelector("span#left").innerText = newLeft;
+            editInfo.imageBeingEdited.offsetLeft + deltaX + "px";
             editInfo.imageBeingEdited.style.left = newLeft;
 
-            const newTop =
-              editInfo.imageBeingEdited.offsetTop + deltaY + "px";
+            const newTop = editInfo.imageBeingEdited.offsetTop + deltaY + "px";
             editInfo.imageBeingEdited.style.top = newTop;
-            document.querySelector("span#top").innerText = newTop;
           }
+          updateBoundingBox();
+          updateEditInfoMessage();
         }
         x1 = e.clientX;
         y1 = e.clientY;
@@ -246,7 +246,8 @@
         } else {
           document.querySelector("span#left").innerText = left + "px";
           document.querySelector("span#top").innerText = top + "px";
-          document.querySelector("span#height").innerText = height != null ? height + "px" : "0px";
+          document.querySelector("span#height").innerText =
+            height != null ? height + "px" : "0px";
           imageEl.src = path.join(imageDirectory, imageFileName);
           imageEl.dataset.imagePath = path.join(imageDirectory, imageFileName);
           imageEl.style.left = left + "px";
@@ -295,6 +296,7 @@
       editResetButton.addEventListener("click", () => {
         resetImage();
         updateBoundingBox();
+        updateEditInfoMessage();
       });
 
       const editCancelButton = document.querySelector("button#cancel");
@@ -306,6 +308,7 @@
         ipcRenderer.send("editImageMode:false");
         document.querySelector("p#edit-message").classList.add("hidden");
         document.querySelector("div#bounding-box").classList.add("hidden");
+        document.querySelector("div#keyboard-tip").classList.add("hidden");
 
         resetImage();
         editInfo.imageBeingEdited = null;
@@ -343,6 +346,12 @@
         );
         bottomRightScaleHandle.style.top = height - 7 + "px";
         bottomRightScaleHandle.style.left = width - 7 + "px";
+      }
+
+      function updateEditInfoMessage() {
+        document.querySelector("span#top").innerText = editInfo.imageBeingEdited.offsetTop;
+        document.querySelector("span#height").innerText = editInfo.imageBeingEdited.offsetHeight;
+        document.querySelector("span#left").innerText = editInfo.imageBeingEdited.offsetLeft;
       }
     </script>
   </body>

@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
+process.env.NODE_ENV = 'Production';
+
 let settings = {};
 
 settings.settingsFileName = "settings.json";
@@ -82,7 +84,9 @@ async function createControlWindow(callback) {
       nodeIntegration: true
     }
   });
-  controlWindow.webContents.openDevTools();
+  if (process.env.NODE_ENV !== 'Production') {
+    controlWindow.webContents.openDevTools();
+  }
   controlWindow.loadFile('controlWindow.html').then(callback);
   controlWindow.on('closed', () => controlWindow = null);
 }
@@ -134,7 +138,9 @@ function createDisplayWindow() {
       nodeIntegration: true,
     }
   });
-  displayWindow.webContents.openDevTools();
+  if (process.env.NODE_ENV !== 'Production') {
+    displayWindow.webContents.openDevTools();
+  }
   displayWindow.loadFile('displayWindow.html');
   displayWindow.on('closed', () => displayWindow = null);
 }
