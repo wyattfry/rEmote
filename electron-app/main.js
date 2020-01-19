@@ -15,6 +15,8 @@ settings.imageDirectories = {
 
 settings.transformInfo = {};
 
+app.disableHardwareAcceleration(); // fixes SLOBS blank screen bug
+
 app.on('ready', function () {
   loadOrCreateSettings(settingsFileExisted => {
     createControlWindow(() => {
