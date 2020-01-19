@@ -4,7 +4,9 @@ This is an electron desktop app to dynamically display layered images, designed 
 
 ## TODO
 
+- add 'confirm exit?' dialog box, at least if in edit mode
 - refactor to follow a more mvc like pattern
+- auto update https://electronjs.org/docs/tutorial/updates
 
 ### Control Window
 
@@ -17,6 +19,10 @@ This is an electron desktop app to dynamically display layered images, designed 
 
 ### Display Window
 
+- fix flipping image when changing
+- fix mouse over area for resize handle (it's too small now)
+- only show options bar (file edit etc) during edit mode (it is visible in slobs)
+- resize from upper left as well
 - refine UI of x,y,height display in edit mode (e.g. status bar at bottom)
 - make little resize box more easily clickable
 

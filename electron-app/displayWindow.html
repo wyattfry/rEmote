@@ -41,8 +41,8 @@
         height: 10px;
         background-color: white;
       }
-      div.nw-resize {
-        cursor: nw-resize;
+      div.nwse-resize {
+        cursor: nwse-resize;
       }
       div.ne-resize {
         cursor: ne-resize;
@@ -57,6 +57,12 @@
       .transparent {
         opacity: 0.8;
       }
+      div#keyboard-tip {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        padding: 10px;
+      }
     </style>
   </head>
   <body class="noselect" draggable="false">
@@ -66,7 +72,7 @@
       <img id="emotions" />
       <img id="costumes" />
       <div id="bounding-box" class="hidden">
-        <div id="bottom-right" class="nw-resize"></div>
+        <div id="bottom-right" class="nwse-resize"></div>
       </div>
       <p id="edit-message" class="hidden">
         <button id="save">Save</button>
@@ -76,10 +82,16 @@
         <span id="height">default</span>
       </p>
     </div>
+    <div id="keyboard-tip" class="hidden"></div>
     <script>
       const electron = require("electron");
       const { ipcRenderer } = electron;
       const path = require("path");
+      const displayController = require("./displayController.js");
+
+      document.querySelector(
+        "div#keyboard-tip"
+      ).innerText = displayController.getKeyboardTipMessage();
 
       let isEditMode = false;
       let mouseIsDraggingOverImage = false;
@@ -97,6 +109,38 @@
       };
 
       const boundingBox = document.querySelector("div#bounding-box");
+
+      let metaKeyDown = false;
+
+      document.body.addEventListener("keydown", function(e) {
+        if (e.key == "Meta" || e.key == "Control") {
+          metaKeyDown = true;
+        }
+      });
+
+      document.body.addEventListener("keyup", function(e) {
+        if (e.key == "Meta" || e.key == "Control") {
+          metaKeyDown = false;
+        }
+      });
+
+      document.body.addEventListener("keydown", function(e) {
+        if (isEditMode) {
+          if (metaKeyDown === true) {
+            displayController.resizeElementWithArrowKeys(
+              e,
+              editInfo.imageBeingEdited
+            );
+          } else {
+            displayController.moveElementWithArrowKeys(
+              e,
+              editInfo.imageBeingEdited
+            );
+          }
+          updateBoundingBox();
+          updateEditInfoMessage();
+        }
+      });
 
       document.body.addEventListener("mousedown", e => {
         if (isEditMode == false) {
@@ -127,27 +171,24 @@
           return;
         }
         if (mouseIsDraggingOverImage == true) {
-          updateBoundingBox();
           const deltaX = e.clientX - x1;
           const deltaY = e.clientY - y1;
           if (editInfo.isScale == true) {
             // scale
             const newHeight =
-              editInfo.imageBeingEdited.offsetHeight + deltaY + "px";
+            editInfo.imageBeingEdited.offsetHeight + deltaY + "px";
             editInfo.imageBeingEdited.style.height = newHeight;
-            document.querySelector("span#height").innerText = newHeight;
           } else if (editInfo.isTranslate == true) {
             // translate
             const newLeft =
-              editInfo.imageBeingEdited.offsetLeft + deltaX + "px";
-            document.querySelector("span#left").innerText = newLeft;
+            editInfo.imageBeingEdited.offsetLeft + deltaX + "px";
             editInfo.imageBeingEdited.style.left = newLeft;
 
-            const newTop =
-              editInfo.imageBeingEdited.offsetTop + deltaY + "px";
+            const newTop = editInfo.imageBeingEdited.offsetTop + deltaY + "px";
             editInfo.imageBeingEdited.style.top = newTop;
-            document.querySelector("span#top").innerText = newTop;
           }
+          updateBoundingBox();
+          updateEditInfoMessage();
         }
         x1 = e.clientX;
         y1 = e.clientY;
@@ -205,7 +246,8 @@
         } else {
           document.querySelector("span#left").innerText = left + "px";
           document.querySelector("span#top").innerText = top + "px";
-          document.querySelector("span#height").innerText = height != null ? height + "px" : "0px";
+          document.querySelector("span#height").innerText =
+            height != null ? height + "px" : "0px";
           imageEl.src = path.join(imageDirectory, imageFileName);
           imageEl.dataset.imagePath = path.join(imageDirectory, imageFileName);
           imageEl.style.left = left + "px";
@@ -221,6 +263,7 @@
         // Show edit message and Save button
         document.querySelector("p#edit-message").classList.remove("hidden");
         document.querySelector("div#bounding-box").classList.remove("hidden");
+        document.querySelector("div#keyboard-tip").classList.remove("hidden");
         isEditMode = true;
         editInfo.imageBeingEdited = document.querySelector("img#" + layer);
         editInfo.imageBeingEdited.classList.add("transparent");
@@ -244,6 +287,7 @@
         editInfo.imageBeingEdited.classList.remove("transparent");
         document.querySelector("p#edit-message").classList.add("hidden");
         document.querySelector("div#bounding-box").classList.add("hidden");
+        document.querySelector("div#keyboard-tip").classList.add("hidden");
         editInfo.imageBeingEdited = null;
         editInfo.layer = null;
       });
@@ -252,6 +296,7 @@
       editResetButton.addEventListener("click", () => {
         resetImage();
         updateBoundingBox();
+        updateEditInfoMessage();
       });
 
       const editCancelButton = document.querySelector("button#cancel");
@@ -263,6 +308,7 @@
         ipcRenderer.send("editImageMode:false");
         document.querySelector("p#edit-message").classList.add("hidden");
         document.querySelector("div#bounding-box").classList.add("hidden");
+        document.querySelector("div#keyboard-tip").classList.add("hidden");
 
         resetImage();
         editInfo.imageBeingEdited = null;
@@ -300,6 +346,12 @@
         );
         bottomRightScaleHandle.style.top = height - 7 + "px";
         bottomRightScaleHandle.style.left = width - 7 + "px";
+      }
+
+      function updateEditInfoMessage() {
+        document.querySelector("span#top").innerText = editInfo.imageBeingEdited.offsetTop;
+        document.querySelector("span#height").innerText = editInfo.imageBeingEdited.offsetHeight;
+        document.querySelector("span#left").innerText = editInfo.imageBeingEdited.offsetLeft;
       }
     </script>
   </body>
