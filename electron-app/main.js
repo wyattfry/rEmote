@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -21,8 +21,10 @@ app.disableHardwareAcceleration(); // fixes SLOBS blank screen bug
 
 app.on('ready', function () {
   loadOrCreateSettings(settingsFileExisted => {
+    // Will instantiate control window if not already.
     createControlWindow(() => {
       if (settingsFileExisted) {
+        console.log("Created control window. Loading images...")
         // If any image directories saved in loaded settings file, load
         // those images as buttons in control window.
         Object.keys(settings.imageDirectories).forEach(layer => {
@@ -30,6 +32,8 @@ app.on('ready', function () {
             loadImages(layer);
           }
         });
+      } else {
+        console.log("Created new settings file.")
       }
     });
     createDisplayWindow();
@@ -58,25 +62,71 @@ function loadOrCreateSettings(callback) {
       fs.readFile(settings.settingsFileName, function (err, data) {
         if (err) {
           console.error("Error reading settings.json");
-          // does it not exist? thus create?
           return;
         }
         settings = JSON.parse(data);
+        console.log("Loaded settings from file.", settings);
+        console.log("Loading images into control window...")
+        Object.keys(settings.imageDirectories).forEach(layer => {
+          if (settings.imageDirectories[layer] != null) {
+            loadImages(layer);
+          }
+        });
         callback(true);
       });
     } else {
-      callback(false);
       // create settings file if it does not already exist
-      fs.writeFile(settings.settingsFileName, JSON.stringify(settings), () => { });
+      fs.writeFile(settings.settingsFileName, JSON.stringify(settings), () => {callback(false)});
     }
   });
 }
 
+const windowMenuTemplate = [
+  {
+    label: 'File',
+    submenu: [
+      {
+        label: 'Import Settings...',
+        click: importSettings,
+      }
+    ],
+  }
+];
+
+function importSettings() {
+  // open file choose for 'settings.json'
+  dialog.showOpenDialog()
+    .then(result => {
+    if (result.canceled) {
+      return;
+    }
+    if (path.basename(result.filePaths[0]) != settings.settingsFileName) {
+      console.warn('Selected file to import was not named "settings.json", maybe not valid.');
+    }
+    const sourceSettingsFile = result.filePaths[0];
+    const destinationSettingsFile = path.join(__dirname, settings.settingsFileName);
+    fs.copyFile(sourceSettingsFile, destinationSettingsFile, (err) => {
+      if (err) {
+        console.error('Could not import settings file.', err);
+        return;
+      }
+      console.log(`Settings file '${sourceSettingsFile}' was copied to '${destinationSettingsFile}'.`)
+      loadOrCreateSettings(()=>console.log('loaded new settings file'));
+    });
+});
+  // once selected load new settings file.
+}
+const controlWindowMenu = Menu.buildFromTemplate(windowMenuTemplate)
+Menu.setApplicationMenu(controlWindowMenu);
 
 // Control Window
 let controlWindow;
 
 async function createControlWindow(callback) {
+  if (controlWindow != undefined) {
+    callback();
+    return
+  }
   controlWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -131,6 +181,10 @@ ipcMain.on("editImageMode:false", function (e, imageFile, left, top, height) {
 let displayWindow;
 
 function createDisplayWindow() {
+  if (displayWindow != undefined) {
+    callback();
+    return
+  }
   displayWindow = new BrowserWindow({
     width: 640,
     height: 480,
@@ -138,6 +192,7 @@ function createDisplayWindow() {
       nodeIntegration: true,
     }
   });
+  displayWindow.setMenuBarVisibility(false);
   if (process.env.NODE_ENV !== 'Production') {
     displayWindow.webContents.openDevTools();
   }
