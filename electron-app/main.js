@@ -57,9 +57,10 @@ app.on('activate', () => {
 })
 
 function loadOrCreateSettings(callback) {
-  fs.exists(settings.settingsFileName, (exists) => {
+  const settingsFile = path.join(app.getAppPath(), settings.settingsFileName);
+  fs.exists(settingsFile, (exists) => {
     if (exists) {
-      fs.readFile(settings.settingsFileName, function (err, data) {
+      fs.readFile(settingsFile, function (err, data) {
         if (err) {
           console.error("Error reading settings.json");
           return;
@@ -104,12 +105,18 @@ function importSettings() {
       console.warn('Selected file to import was not named "settings.json", maybe not valid.');
     }
     const sourceSettingsFile = result.filePaths[0];
-    const destinationSettingsFile = path.join(__dirname, settings.settingsFileName);
+    // const destinationSettingsFile = path.join(__dirname, settings.settingsFileName);
+    const destinationSettingsFile = path.join(app.getAppPath(), settings.settingsFileName);
     fs.copyFile(sourceSettingsFile, destinationSettingsFile, (err) => {
       if (err) {
         console.error('Could not import settings file.', err);
+        dialog.showErrorBox("Error", `Could not import settings file '${sourceSettingsFile}'`)
         return;
       }
+      dialog.showMessageBox({
+        title: "Success",
+        message: `Sucessfully copied settings file '${sourceSettingsFile}' to '${destinationSettingsFile}'`,
+      });
       console.log(`Settings file '${sourceSettingsFile}' was copied to '${destinationSettingsFile}'.`)
       loadOrCreateSettings(()=>console.log('loaded new settings file'));
     });
@@ -210,7 +217,8 @@ function loadImages(layer) {
 }
 
 function saveSettings() {
-  fs.writeFile(settings.settingsFileName, JSON.stringify(settings), () => {console.log("Saved settings.")});
+  const settingsFile = path.join(app.getAppPath(), settings.settingsFileName);
+  fs.writeFile(settingsFile, JSON.stringify(settings), () => {console.log("Saved settings.")});
 }
 
 function setImageDirectory(layer) {

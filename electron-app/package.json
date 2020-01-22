@@ -1,13 +1,13 @@
 {
   "name": "remote",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "This is an electron desktop app to dynamically display layered images, designed to be used in a live game streaming context.",
   "productName": "rEmote",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
-    "build_win": "electron-packager . rEmote --platform=win32 --arch=x64"
+    "build_win": "electron-packager . rEmote --platform=win32 --arch=x64 --out=dist --overwrite"
   },
   "repository": "https://github.com/wyattfry/rEmote",
   "author": "Wyatt Fry",
