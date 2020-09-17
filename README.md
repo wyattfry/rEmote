@@ -2,6 +2,8 @@
 
 This is an electron desktop app to dynamically display layered images, designed to be used in a live game streaming context.
 
+![Screenshot](./screenshot.png)
+
 ## TODO
 
 - add 'confirm exit?' dialog box, at least if in edit mode
