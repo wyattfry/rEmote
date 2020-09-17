@@ -78,8 +78,10 @@ let controlWindow;
 
 async function createControlWindow(callback) {
   controlWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 700,
+    height: 800,
+    x: 100,
+    y: 200,
     webPreferences: {
       nodeIntegration: true
     }
@@ -134,6 +136,8 @@ function createDisplayWindow() {
   displayWindow = new BrowserWindow({
     width: 640,
     height: 480,
+    x: 800,
+    y: 200,
     webPreferences: {
       nodeIntegration: true,
     }
