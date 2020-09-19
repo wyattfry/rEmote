@@ -67,3 +67,5 @@ ts-gen
 
 settings.json
 dist/
+
+**/rEmote-*/

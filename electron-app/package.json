@@ -1,6 +1,6 @@
 {
   "name": "remote",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "This is an electron desktop app to dynamically display layered images, designed to be used in a live game streaming context.",
   "productName": "rEmote",
   "main": "main.js",
